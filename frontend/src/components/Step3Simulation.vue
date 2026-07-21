@@ -519,7 +519,15 @@ const fetchRunStatus = async () => {
       // 通过检测 twitter_completed 和 reddit_completed 状态判断
       const platformsCompleted = checkPlatformsCompleted(data)
       
-      if (isCompleted || platformsCompleted) {
+      // An explicit runner failure is authoritative. Platform completion flags
+      // can be stale or partial when one subprocess exits successfully before
+      // another subprocess fails, so inferred completion must not mask it.
+      if (isFailed) {
+        addLog(t('log.simFailed') + (data.error ? `: ${data.error}` : ''))
+        phase.value = 2
+        stopPolling()
+        emit('update-status', 'error')
+      } else if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
           addLog(t('log.allPlatformsCompleted'))
         }
@@ -527,11 +535,6 @@ const fetchRunStatus = async () => {
         phase.value = 2
         stopPolling()
         emit('update-status', 'completed')
-      } else if (isFailed) {
-        addLog(t('log.simFailed') + (data.error ? `: ${data.error}` : ''))
-        phase.value = 2
-        stopPolling()
-        emit('update-status', 'error')
       }
     }
   } catch (err) {
