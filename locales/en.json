@@ -537,6 +537,7 @@
     "stopException": "Stop error: {error}",
     "allPlatformsCompleted": "✓ All platform simulations have ended",
     "simCompleted": "✓ Simulation completed",
+    "simFailed": "✗ Simulation failed",
     "reportRequestSent": "Report generation request sent, please wait...",
     "startingReportGen": "Starting report generation...",
     "reportGenTaskStarted": "✓ Report generation task started: {reportId}",
