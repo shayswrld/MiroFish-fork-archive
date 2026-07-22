@@ -4,7 +4,7 @@
 
 <a href="https://trendshift.io/repositories/16144" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16144" alt="666ghj%2FMiroFish | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-简洁通用的群体智能引擎，预测万物
+A Simple and Universal Swarm Intelligence Engine, Predicting Anything
 </br>
 <em>A Simple and Universal Swarm Intelligence Engine, Predicting Anything</em>
 
@@ -20,7 +20,7 @@
 [![X](https://img.shields.io/badge/X-Follow-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/mirofish_ai)
 [![Instagram](https://img.shields.io/badge/Instagram-Follow-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/mirofish_ai/)
 
-[English](./README.md) | [中文文档](./README-ZH.md)
+[English](./README.md)
 
 </div>
 
@@ -49,16 +49,16 @@ Welcome to visit our online demo environment and experience a prediction simulat
 <div align="center">
 <table>
 <tr>
-<td><img src="./static/image/Screenshot/运行截图1.png" alt="Screenshot 1" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图2.png" alt="Screenshot 2" width="100%"/></td>
+<td><img src="./static/image/Screenshot/screenshot1.png" alt="Screenshot 1" width="100%"/></td>
+<td><img src="./static/image/Screenshot/screenshot2.png" alt="Screenshot 2" width="100%"/></td>
 </tr>
 <tr>
-<td><img src="./static/image/Screenshot/运行截图3.png" alt="Screenshot 3" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图4.png" alt="Screenshot 4" width="100%"/></td>
+<td><img src="./static/image/Screenshot/screenshot3.png" alt="Screenshot 3" width="100%"/></td>
+<td><img src="./static/image/Screenshot/screenshot4.png" alt="Screenshot 4" width="100%"/></td>
 </tr>
 <tr>
-<td><img src="./static/image/Screenshot/运行截图5.png" alt="Screenshot 5" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图6.png" alt="Screenshot 6" width="100%"/></td>
+<td><img src="./static/image/Screenshot/screenshot5.png" alt="Screenshot 5" width="100%"/></td>
+<td><img src="./static/image/Screenshot/screenshot6.png" alt="Screenshot 6" width="100%"/></td>
 </tr>
 </table>
 </div>
@@ -68,7 +68,7 @@ Welcome to visit our online demo environment and experience a prediction simulat
 ### 1. Wuhan University Public Opinion Simulation + MiroFish Project Introduction
 
 <div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
+<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/wuda_demo_cover.png" alt="MiroFish Demo Video" width="75%"/></a>
 
 Click the image to watch the complete demo video for prediction using BettaFish-generated "Wuhan University Public Opinion Report"
 </div>
@@ -76,7 +76,7 @@ Click the image to watch the complete demo video for prediction using BettaFish-
 ### 2. Dream of the Red Chamber Lost Ending Simulation
 
 <div align="center">
-<a href="https://www.bilibili.com/video/BV1cPk3BBExq" target="_blank"><img src="./static/image/红楼梦模拟推演封面.jpg" alt="MiroFish Demo Video" width="75%"/></a>
+<a href="https://www.bilibili.com/video/BV1cPk3BBExq" target="_blank"><img src="./static/image/red_mansion_demo_cover.jpg" alt="MiroFish Demo Video" width="75%"/></a>
 
 Click the image to watch MiroFish's deep prediction of the lost ending based on hundreds of thousands of words from the first 80 chapters of "Dream of the Red Chamber"
 </div>
@@ -114,18 +114,39 @@ cp .env.example .env
 
 **Required Environment Variables:**
 
+The only required key is `LLM_API_KEY`. The project supports any OpenAI-compatible LLM endpoint.
+
+**Option A — Ollama Cloud (recommended):**
+
 ```env
-# LLM API Configuration (supports any LLM API with OpenAI SDK format)
-# Recommended: Alibaba Qwen-plus model via Bailian Platform: https://bailian.console.aliyun.com/
-# High consumption, try simulations with fewer than 40 rounds first
-LLM_API_KEY=your_api_key
+# 1. Create an API key: https://ollama.com/settings/keys
+# 2. Pick a cloud model from: https://ollama.com/search?c=cloud
+LLM_API_KEY=your_ollama_api_key
+LLM_BASE_URL=https://ollama.com/v1
+LLM_MODEL_NAME=qwen3.5:397b
+```
+
+> **Model requirements**: The model must support `response_format={"type":"json_object"}` (JSON mode) and tool calling. Recommended cloud models: `qwen3.5:397b`, `glm-5.2`, `deepseek-v4-flash`, `gpt-oss:120b`.
+
+**Option B — Local Ollama:**
+
+```env
+# 1. Install Ollama: https://ollama.com
+# 2. Pull a model:  ollama pull qwen2.5:7b
+LLM_API_KEY=ollama
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL_NAME=qwen2.5:7b
+```
+
+**Option C — Other cloud providers (OpenAI, DeepSeek, etc.):**
+
+```env
+LLM_API_KEY=your_cloud_api_key
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
-
-# Zep Cloud Configuration
-# Free monthly quota is sufficient for simple usage: https://app.getzep.com/
-ZEP_API_KEY=your_zep_api_key
 ```
+
+> **No external SaaS required**: Knowledge graph storage, entity extraction, and semantic search are all handled locally via sqlite + LLM-based extraction. There is no Zep Cloud dependency.
 
 #### 2. Install Dependencies
 
@@ -179,7 +200,7 @@ Reads `.env` from root directory by default, maps ports `3000 (frontend) / 5001 
 ## 📬 Join the Conversation
 
 <div align="center">
-<img src="./static/image/QQ群.png" alt="QQ Group" width="60%"/>
+<img src="./static/image/qq_group.png" alt="QQ Group" width="60%"/>
 </div>
 
 &nbsp;

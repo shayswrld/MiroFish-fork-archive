@@ -2,7 +2,7 @@
 .DS_Store
 Thumbs.db
 
-# 环境变量（保护敏感信息）
+# Environment variables (protect sensitive info)
 .env
 .env.local
 .env.*.local
