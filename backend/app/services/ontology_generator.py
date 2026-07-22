@@ -10,7 +10,10 @@ from typing import Dict, Any, List, Optional
 from ..utils.llm_client import LLMClient
 from ..utils.locale import get_language_instruction
 from ..utils.file_parser import split_text_into_chunks
-from ..utils.ontology import normalize_ontology_attribute
+from ..utils.ontology import (
+    MAX_ONTOLOGY_TYPES,
+    normalize_ontology_attributes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +131,7 @@ B. **具体类型（8个，根据文本内容设计）**：
 ### 3. 属性设计
 
 - 每个实体类型1-3个关键属性
-- **注意**：属性名不能使用 `name`、`uuid`、`group_id`、`created_at`、`summary`（这些是系统保留字）
+- **注意**：属性名不能使用 `name`、`uuid`、`group_id`、`graph_id`、`created_at`、`summary`（这些是系统保留字）
 - 推荐使用：`full_name`, `title`, `role`, `position`, `location`, `description` 等
 
 ## 实体类型参考
@@ -268,7 +271,7 @@ class OntologyGenerator:
 2. 最后2个必须是兜底类型：Person（个人兜底）和 Organization（组织兜底）
 3. 前8个是根据文本内容设计的具体类型
 4. 所有实体类型必须是现实中可以发声的主体，不能是抽象概念
-5. 属性名不能使用 name、uuid、group_id 等保留字，用 full_name、org_name 等替代
+5. 属性名不能使用 name、uuid、group_id、graph_id 等保留字，用 full_name、org_name 等替代
 """
         
         return message
@@ -431,14 +434,11 @@ class OntologyGenerator:
                 if entity["name"] != original_name:
                     logger.warning(f"Entity type name '{original_name}' auto-converted to '{entity['name']}'")
                 entity_name_map[original_name] = entity["name"]
-            if "attributes" not in entity:
-                entity["attributes"] = []
-            # Normalize LLM output and discard unusable attribute definitions.
-            entity["attributes"] = [
-                normalized
-                for attr in entity["attributes"]
-                if (normalized := normalize_ontology_attribute(attr)) is not None
-            ]
+            # Normalize LLM output, enforce Zep field limits, and guarantee at
+            # least one property for every custom ontology type.
+            entity["attributes"] = normalize_ontology_attributes(
+                entity.get("attributes", [])
+            )
             if "examples" not in entity:
                 entity["examples"] = []
             # 确保description不超过100字符
@@ -461,20 +461,17 @@ class OntologyGenerator:
                     st["target"] = entity_name_map[st["target"]]
             if "source_targets" not in edge:
                 edge["source_targets"] = []
-            if "attributes" not in edge:
-                edge["attributes"] = []
-            # Normalize LLM output and discard unusable attribute definitions.
-            edge["attributes"] = [
-                normalized
-                for attr in edge["attributes"]
-                if (normalized := normalize_ontology_attribute(attr)) is not None
-            ]
+            # Normalize LLM output, enforce Zep field limits, and guarantee at
+            # least one property for every custom ontology type.
+            edge["attributes"] = normalize_ontology_attributes(
+                edge.get("attributes", [])
+            )
             if len(edge.get("description", "")) > 100:
                 edge["description"] = edge["description"][:97] + "..."
         
         # Zep API 限制：最多 10 个自定义实体类型，最多 10 个自定义边类型
-        MAX_ENTITY_TYPES = 10
-        MAX_EDGE_TYPES = 10
+        MAX_ENTITY_TYPES = MAX_ONTOLOGY_TYPES
+        MAX_EDGE_TYPES = MAX_ONTOLOGY_TYPES
 
         # 去重：按 name 去重，保留首次出现的
         seen_names = set()

@@ -16,7 +16,11 @@ from zep_cloud import EpisodeData, EntityEdgeSourceTarget
 from ..config import Config
 from ..models.task import TaskManager, TaskStatus
 from ..utils.zep_paging import fetch_all_nodes, fetch_all_edges
-from ..utils.ontology import normalize_ontology_attribute
+from ..utils.ontology import (
+    MAX_ONTOLOGY_TYPES,
+    RESERVED_ONTOLOGY_ATTRIBUTE_NAMES,
+    normalize_ontology_attributes,
+)
 from .text_processor import TextProcessor
 from ..utils.locale import t, get_locale, set_locale
 
@@ -214,18 +218,15 @@ class GraphBuilderService:
         # 这是 Zep SDK 要求的用法，警告来自动态类创建，可以安全忽略
         warnings.filterwarnings('ignore', category=UserWarning, module='pydantic')
         
-        # Zep 保留名称，不能作为属性名
-        RESERVED_NAMES = {'uuid', 'name', 'group_id', 'name_embedding', 'summary', 'created_at'}
-        
         def safe_attr_name(attr_name: str) -> str:
             """将保留名称转换为安全名称"""
-            if attr_name.lower() in RESERVED_NAMES:
+            if attr_name.lower() in RESERVED_ONTOLOGY_ATTRIBUTE_NAMES:
                 return f"entity_{attr_name}"
             return attr_name
         
         # 动态创建实体类型
         entity_types = {}
-        for entity_def in ontology.get("entity_types", []):
+        for entity_def in ontology.get("entity_types", [])[:MAX_ONTOLOGY_TYPES]:
             name = entity_def["name"]
             description = entity_def.get("description", f"A {name} entity.")
             
@@ -233,10 +234,9 @@ class GraphBuilderService:
             attrs = {"__doc__": description}
             annotations = {}
             
-            for attr_def in entity_def.get("attributes", []):
-                normalized = normalize_ontology_attribute(attr_def)
-                if normalized is None:
-                    continue
+            for normalized in normalize_ontology_attributes(
+                entity_def.get("attributes", [])
+            ):
                 attr_name = safe_attr_name(normalized["name"])  # 使用安全名称
                 attr_desc = normalized["description"]
                 # Zep API 需要 Field 的 description，这是必需的
@@ -252,7 +252,7 @@ class GraphBuilderService:
         
         # 动态创建边类型
         edge_definitions = {}
-        for edge_def in ontology.get("edge_types", []):
+        for edge_def in ontology.get("edge_types", [])[:MAX_ONTOLOGY_TYPES]:
             name = edge_def["name"]
             description = edge_def.get("description", f"A {name} relationship.")
             
@@ -260,10 +260,9 @@ class GraphBuilderService:
             attrs = {"__doc__": description}
             annotations = {}
             
-            for attr_def in edge_def.get("attributes", []):
-                normalized = normalize_ontology_attribute(attr_def)
-                if normalized is None:
-                    continue
+            for normalized in normalize_ontology_attributes(
+                edge_def.get("attributes", [])
+            ):
                 attr_name = safe_attr_name(normalized["name"])  # 使用安全名称
                 attr_desc = normalized["description"]
                 # Zep API 需要 Field 的 description，这是必需的
@@ -294,7 +293,9 @@ class GraphBuilderService:
         if entity_types or edge_definitions:
             self.client.graph.set_ontology(
                 graph_ids=[graph_id],
-                entities=entity_types if entity_types else None,
+                # zep-cloud 3.13.0 iterates entities.items(), so an edge-only
+                # ontology must pass an empty dictionary rather than None.
+                entities=entity_types,
                 edges=edge_definitions if edge_definitions else None,
             )
     
